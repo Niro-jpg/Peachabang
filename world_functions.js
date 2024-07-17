@@ -46,3 +46,21 @@ export function add_spooky(position)
     scene.add(pointLight);
     console.log("added spoks")
 }
+
+export function load_music(camera)
+{
+    // Caricamento e riproduzione dell'audio
+    let listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    let sound = new THREE.Audio(listener);
+    let audioLoader = new THREE.AudioLoader();
+
+    return audioLoader.load('./castle_theme.mp3', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(true); // Se vuoi che la musica si ripeta
+        sound.setVolume(0.5); // Imposta il volume
+        sound.play();
+    });
+
+}

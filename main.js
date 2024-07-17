@@ -2,13 +2,15 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon';
 import * as v from './VARIABLES.js'
 import {Entity, Character, Platform} from './Entities.js'
-import {add_platform , add_character, add_lava, add_spooky, add_enemy} from './world_functions.js'
+import {add_platform , add_character, add_lava, add_spooky, add_enemy, load_music} from './world_functions.js'
 import { vec3 } from 'three/examples/jsm/nodes/Nodes.js';
 
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2()
 var center = new THREE.Vector2()
 document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+
 
 export var characters_list = []
 export var entities_list = []
@@ -24,6 +26,7 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.setAnimationLoop( animate );
 document.body.appendChild( renderer.domElement );
 
+var audio_loader = load_music(camera)
 
 export const world = new CANNON.World();
 world.gravity.set(0, -200, 0);
@@ -264,8 +267,18 @@ const body_geometry = new THREE.SphereGeometry( 1, 32, 10 );
 scene.add(body)
 
 
+let startTime = new Date();
+
+let currentTime = new Date();
+
+let elapsedTime = 0
 
 function animate() {
+
+	currentTime = new Date()
+
+	elapsedTime = (currentTime - startTime);
+	startTime = currentTime
 
 	var [xspeed,zspeed] = character_dir();
 
@@ -329,12 +342,15 @@ function animate() {
 	for (var enemy of enemies_list)
 	{
 		enemy.move_character()
-		if(enemy.position.distanceTo(main_character.position) < 60)
+		if(enemy.position.distanceTo(main_character.position) < 100)
 		{
 			let enemy_orientation= main_character.position.clone().sub(enemy.position)
 			enemy.change_orientation(new THREE.Euler(0,Math.atan2(enemy_orientation.x, enemy_orientation.z),0, 'XYZ'));
 			enemy.update()
 		}
+
+		enemy.add_charge(elapsedTime)
+		enemy.try_to_shoot(main_character)
 
 	}
 

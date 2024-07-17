@@ -270,7 +270,7 @@ export class Character extends Entity {
 
     shoot(dir)
     {
-        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir))
+        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 1.5))
     } 
   }
 
@@ -362,7 +362,7 @@ export class Character extends Entity {
   }
 
   export class Projectile extends Entity {
-    constructor(position = new THREE.Vector3(0,3,0), direction = new THREE.Vector3(0,0,0)) {
+    constructor(position = new THREE.Vector3(0,3,0), direction = new THREE.Vector3(0,0,0), speed = 0.5) {
 
         const shape = new CANNON.Sphere(0.4);
         const cbody = new CANNON.Body({
@@ -391,7 +391,7 @@ export class Character extends Entity {
         scene.add( body );
         //world.addBody(cbody);
         this.direction = direction;
-        this.speed = 1
+        this.speed = speed
 
         //cbody.velocity.set(speed*direction.x, speed*direction.y, speed*direction.z);
 
@@ -450,6 +450,8 @@ export class Character extends Entity {
       super(cbody, new THREE.Vector3(0, 30,0),new THREE.Euler(0,0,0),[weapon],[body_base, body],[bbbase_body, mbbody]);
       
       this.speed = 24;
+      this.charge = 5000
+      this.max_charge = 5000
       scene.add( body )
       scene.add( weapon )
       scene.add( body_base)
@@ -487,4 +489,18 @@ export class Character extends Entity {
     {
         objects_list.push(new Projectile(this.meshes[0].position.clone(), dir))
     } 
+
+    add_charge(charge)
+    {
+        this.charge = Math.min(this.max_charge, this.charge + charge)
+    }
+
+    try_to_shoot(character)
+    {
+        if(this.position.distanceTo(character.position) < 100 && this.charge == this.max_charge)
+        {
+            this.shoot(character.position.clone().sub(this.position).normalize())
+            this.charge = 0
+        }
+    }
   }
