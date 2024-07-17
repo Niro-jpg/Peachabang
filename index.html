@@ -5,12 +5,25 @@
 		<title>My first three.js app</title>
 		<script type="module" src="/main.js"></script>
 		<style>
-            miaos
-			body { margin: 0; }
+            body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 1px solid red;
+            border-radius: 50%;
+            pointer-events: none; /* Makes sure the crosshair doesn't interfere with pointer events */
+        }
 		</style>
 	</head>
 	
 	<body>
+		<div id="crosshair"></div>
 		
 	</body>
 </html>
