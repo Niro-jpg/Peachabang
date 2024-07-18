@@ -375,8 +375,10 @@ function animate() {
 						}
 	}
 
-	for (let index of remove_list) {
-		objects_list.splice(index, 1);
+	console.log(remove_list)
+
+	for (let i = 0; i < remove_list.length; i++) {
+		objects_list.splice(remove_list[i]-i, 1);
 	  }
 
 	for (var enemy of enemies_list)
