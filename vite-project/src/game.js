@@ -27,6 +27,18 @@ document.body.appendChild( renderer.domElement );
 
 var audio_loader = load_music(camera)
 
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const sound = new THREE.Audio(listener);
+
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('/sounds/shot.ogg', function(buffer) {
+  sound.setBuffer(buffer);
+  sound.setLoop(false);
+  sound.setVolume(1);
+});
+
 export const world = new CANNON.World();
 world.gravity.set(0, -200, 0);
 
@@ -45,7 +57,6 @@ add_spooky(new THREE.Vector3(-15,20,-165))
 const dl = new THREE.DirectionalLight('white', 0.2);
 dl.position.set(1, 9, 2);
 dl.castShadow = true;
-const dlHelper = new THREE.DirectionalLightHelper(dl, 3);
 scene.add(dl);
 
 var main_character= add_character(new CANNON.Vec3(-30,4,120))
@@ -113,6 +124,7 @@ function onMouseClick(event) {
 	// Se c'è un'intersezione, ottieni le coordinate
 	if (intersects.length > 0) {
 	  const intersect = intersects[0];
+	  sound.play();
 		main_character.shoot(new THREE.Vector3(intersect.point.x - main_character.position.x,intersect.point.y -main_character.position.y, intersect.point.z - main_character.position.z).normalize() )
 	}
 	else 
