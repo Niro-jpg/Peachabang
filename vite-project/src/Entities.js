@@ -439,8 +439,9 @@ export class Character extends Entity {
         var weapon_geometry = new THREE.BoxGeometry( 0.4, 0.4, 0.4);
         var weapon_material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
         var weapon = new THREE.Mesh( weapon_geometry, weapon_material );
-        weapon.position.copy( new THREE.Vector3(-1,1,0))
+        weapon.position.copy( new THREE.Vector3(0,0.5,-1))
         weapon.castShadow = true;
+        weapon.visible = false;
 
         var material = new CANNON.Material( {
             friction: 1000.0, 
