@@ -5,8 +5,6 @@ import {world, scene, platforms_list, objects_list} from '/src/game.js';
 export class Entity {
     constructor(body, position = NaN, orientation = NaN, meshes = [], bboxes_mesh = [], bboxes = []) 
     {
-        console.log(position, orientation, meshes, bboxes)
-
         this.body = body;
 
         this.position = position;
@@ -279,11 +277,11 @@ export class Character extends Entity {
 
     shoot(dir)
     {
-        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 1.9, 'blue', 0.4))
+        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 1.9, 'blue', 0.4, 'character'))
     } 
   }
 
-  export class Platform extends Entity {
+export class Platform extends Entity {
     constructor(meshShape = new THREE.Vector3(30,1,30), position = new THREE.Vector3(0,0,0)) {
 
 
@@ -323,7 +321,7 @@ export class Character extends Entity {
   
   }
 
-  export class Lava extends Entity {
+export class Lava extends Entity {
     constructor( position = new THREE.Vector3(0,0,0)) {
 
         const shape = new CANNON.Box(new CANNON.Vec3(1000, 0.5, 1000 ));
@@ -368,9 +366,10 @@ export class Character extends Entity {
   
   }
 
-  export class Projectile extends Entity {
-    constructor(position = new THREE.Vector3(0,3,0), direction = new THREE.Vector3(0,0,0), speed = 0.5, color = 'red', rad) {
+export class Projectile extends Entity {
+    constructor(position = new THREE.Vector3(0,3,0), direction = new THREE.Vector3(0,0,0), speed = 0.5, color = 'red', rad, tag) {
 
+        
         const shape = new CANNON.Sphere(rad);
         const cbody = new CANNON.Body({
         mass: 1,
@@ -399,6 +398,7 @@ export class Character extends Entity {
         //world.addBody(cbody);
         this.direction = direction;
         this.speed = speed
+        this.tag = tag
 
         //cbody.velocity.set(speed*direction.x, speed*direction.y, speed*direction.z);
 
@@ -411,7 +411,7 @@ export class Character extends Entity {
   
   }
 
-  export class Enemy extends Entity {
+export class Enemy extends Entity {
     constructor(position = new CANNON.Vec3(0,10,0)) {
 
         var body_geometry = new THREE.SphereGeometry( 1, 32, 10 );
@@ -460,8 +460,8 @@ export class Character extends Entity {
         var texture = textureLoader.load('enemy_sprites/frame_000_delay-0.05s.png');
         var sprite_material = new THREE.SpriteMaterial({ map: texture });
         var sprite = new THREE.Sprite(sprite_material );
-        sprite.position.copy(new THREE.Vector3(0,0,0))
-        sprite.scale.set(3, 3, 2);
+        sprite.position.copy(new THREE.Vector3(0,1,0))
+        sprite.scale.set(5, 5, 2);
 
         
 
@@ -505,7 +505,7 @@ export class Character extends Entity {
 
     shoot(dir)
     {
-        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 0.35, 'red', 0.6))
+        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 0.35, 'red', 0.6, 'enemy'))
     } 
 
     add_charge(charge)
@@ -521,6 +521,241 @@ export class Character extends Entity {
             this.charge = 0
         }
     }
-  }
+}
 
 
+
+
+export class Boss extends Entity {
+    constructor(position = new CANNON.Vec3(0,10,0)) {
+
+        var body_geometry = new THREE.SphereGeometry( 3, 32, 10 );
+        var body_material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+        var body = new THREE.Mesh( body_geometry, body_material );
+        body.visible= false
+        body.position.add( new THREE.Vector3(0,0,0))
+        body.castShadow = true;
+
+        var body_base_geometry = new THREE.BoxGeometry( 3 );
+        var body_base_material = new THREE.MeshPhongMaterial( { color: 0xff2f3f } );
+        var body_base = new THREE.Mesh( body_base_geometry, body_base_material );
+        body_base.visible = false
+        body_base.position.add( new THREE.Vector3(0,-0.75,0))
+
+        var bbbase_body = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+        bbbase_body.setFromObject(body_base)
+
+        var center = new THREE.Vector3(0, 0, 0);
+        let dmbbody = new THREE.Sphere(center,7);
+        let mbbody = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 3);
+        mbbody.set(center,1)
+
+
+        var weapon_geometry = new THREE.BoxGeometry( 0.4, 0.4, 0.4);
+        var weapon_material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+        var weapon = new THREE.Mesh( weapon_geometry, weapon_material );
+        weapon.position.copy( new THREE.Vector3(0,0.5,-3.5))
+        weapon.castShadow = true;
+        weapon.visible = false;
+
+        var material = new CANNON.Material( {
+            friction: 1000.0, 
+        })
+        const shape = new CANNON.Sphere(3);
+        const cbody = new CANNON.Body({
+        mass: 1,
+        position: position,
+        shape: shape,
+        material:material
+        });
+        world.addBody(cbody);
+
+
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load('sprites/boss_sprites/demon_idle_1.png');
+        var sprite_material = new THREE.SpriteMaterial({ map: texture });
+        var sprite = new THREE.Sprite(sprite_material );
+        sprite.position.copy(new THREE.Vector3(0,3,0))
+        sprite.scale.set(18, 12, 2);
+
+        var pointLight = new THREE.PointLight('red', 1000, 100);
+        pointLight.position.set(0,0,0);
+        pointLight.castShadow = true;
+        scene.add(pointLight);
+
+        
+
+      super(cbody, new THREE.Vector3(0, 30,0),new THREE.Euler(0,0,0),[weapon, sprite, pointLight],[body_base, body],[bbbase_body, mbbody]);
+      
+      this.speed = 24;
+      this.charge = 5000
+      this.max_charge = 5000
+      scene.add( body )
+      scene.add(sprite)
+      scene.add( weapon )
+      scene.add( body_base)
+    }
+  
+    jump() {
+
+        var jumpImpulse = new CANNON.Vec3(0, 60, 0); 
+
+        for(var platform of platforms_list)
+        {
+            if(this.bboxes[0].intersectsBox(platform.bboxes[0]))
+                {
+                    this.body.applyImpulse(jumpImpulse, this.body.position);
+                }
+        }
+        
+    }
+
+    move_character(move = new THREE.Vector3(0,0,0)) {
+
+        //var moveImpulse = new CANNON.Vec3(move.x*this.speed, move.y, move.z*this.speed); 
+        //this.body.position = this.body.position.vadd(moveImpulse)
+
+        var damping = 0.6
+
+        this.body.velocity.set(this.body.velocity.x + move.x*this.speed, this.body.velocity.y, this.body.velocity.z + move.z*this.speed);
+        this.body.velocity.x *= damping;
+        this.body.velocity.z *= damping;
+        this.body.angularVelocity.set(0, this.body.angularVelocity.y*=damping, 0)
+    }
+
+    shoot(dir)
+    {
+        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 0.35, 'red', 1, 'boss'))
+    } 
+
+    add_charge(charge)
+    {
+        this.charge = Math.min(this.max_charge, this.charge + charge)
+    }
+
+    try_to_shoot(character)
+    {
+        if(this.position.distanceTo(character.position) < 100 && this.charge == this.max_charge)
+        {
+            this.shoot(character.bboxes_mesh[0].position.clone().sub(this.position).normalize())
+            this.charge = 0
+        }
+    }
+}
+
+export class Ghost extends Entity {
+    constructor(position = new CANNON.Vec3(0,10,0)) {
+
+        var body_geometry = new THREE.SphereGeometry( 1, 32, 10 );
+        var body_material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+        var body = new THREE.Mesh( body_geometry, body_material );
+        body.visible= false
+        body.position.add( new THREE.Vector3(0,0,0))
+        body.castShadow = true;
+
+        var body_base_geometry = new THREE.BoxGeometry( 1 );
+        var body_base_material = new THREE.MeshPhongMaterial( { color: 0xff2f3f } );
+        var body_base = new THREE.Mesh( body_base_geometry, body_base_material );
+        body_base.visible = false
+        body_base.position.add( new THREE.Vector3(0,-0.75,0))
+
+        var bbbase_body = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+        bbbase_body.setFromObject(body_base)
+
+        var center = new THREE.Vector3(0, 0, 0);
+        let dmbbody = new THREE.Sphere(center,7);
+        let mbbody = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1);
+        mbbody.set(center,1)
+
+
+        var weapon_geometry = new THREE.BoxGeometry( 0.4, 0.4, 0.4);
+        var weapon_material = new THREE.MeshPhongMaterial( { color: 0x00ff00 } );
+        var weapon = new THREE.Mesh( weapon_geometry, weapon_material );
+        weapon.position.copy( new THREE.Vector3(0,0.5,-1))
+        weapon.castShadow = true;
+        weapon.visible = false;
+
+        var material = new CANNON.Material( {
+            friction: 1000.0, 
+        })
+        const shape = new CANNON.Sphere(1);
+        const cbody = new CANNON.Body({
+        mass: 0,
+        position: position,
+        shape: shape,
+        material:material
+        });
+        world.addBody(cbody);
+
+
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load('sprites/ghost_sprites_ghost1.png');
+        var sprite_material = new THREE.SpriteMaterial({ map: texture });
+        var sprite = new THREE.Sprite(sprite_material );
+        sprite.position.copy(new THREE.Vector3(0,0,0))
+        sprite.scale.set(3, 3, 2);
+
+        var pointLight = new THREE.PointLight('white', 10, 100);
+        pointLight.position.set(0,0,0);
+        pointLight.castShadow = true;
+        scene.add(pointLight);
+
+        
+
+      super(cbody, new THREE.Vector3(0, 30,0),new THREE.Euler(0,0,0),[weapon, sprite, pointLight],[body_base, body],[bbbase_body, mbbody]);
+      
+      this.speed = 24;
+      this.charge = 5000
+      this.max_charge = 5000
+      scene.add( body )
+      scene.add(sprite)
+      scene.add( weapon )
+      scene.add( body_base)
+    }
+  
+    jump() {
+
+        var jumpImpulse = new CANNON.Vec3(0, 60, 0); 
+
+        for(var platform of platforms_list)
+        {
+            if(this.bboxes[0].intersectsBox(platform.bboxes[0]))
+                {
+                    this.body.applyImpulse(jumpImpulse, this.body.position);
+                }
+        }
+        
+    }
+
+    move_character(move = new THREE.Vector3(0,0,0)) {
+
+        //var moveImpulse = new CANNON.Vec3(move.x*this.speed, move.y, move.z*this.speed); 
+        //this.body.position = this.body.position.vadd(moveImpulse)
+
+        var damping = 0.6
+
+        this.body.velocity.set(this.body.velocity.x + move.x*this.speed, this.body.velocity.y, this.body.velocity.z + move.z*this.speed);
+        this.body.velocity.x *= damping;
+        this.body.velocity.z *= damping;
+        this.body.angularVelocity.set(0, this.body.angularVelocity.y*=damping, 0)
+    }
+
+    shoot(dir)
+    {
+        objects_list.push(new Projectile(this.meshes[0].position.clone(), dir, 0.35, 'red', 0.6, 'ghost'))
+    } 
+
+    add_charge(charge)
+    {
+        this.charge = Math.min(this.max_charge, this.charge + charge)
+    }
+
+    try_to_shoot(character)
+    {
+        if(this.position.distanceTo(character.position) < 100 && this.charge == this.max_charge)
+        {
+            this.shoot(character.bboxes_mesh[0].position.clone().sub(this.position).normalize())
+            this.charge = 0
+        }
+    }
+}
