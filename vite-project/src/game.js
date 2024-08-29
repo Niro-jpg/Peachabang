@@ -447,6 +447,10 @@ function animate() {
 										{
 											continue
 										}
+										if (remove_list.includes(j))
+										{
+											continue
+										}
 										if(objects_list[i].position.distanceTo(objects_list[j].position) < 1)
 										{
 											let power = 2
@@ -455,12 +459,14 @@ function animate() {
 											remove_list.push(i)
 											objects_list[i].destroy()
 											console.log("touched")
+											break
 										}
 											
 									}
 								}
 
 						}
+						
 	}
 
 	for (let i = 0; i < remove_list.length; i++) {
